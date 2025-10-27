@@ -1,22 +1,22 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import supabase from "../helper/supabaseClient";
-import { ToastContainer, toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+import { FiUserPlus, FiLoader, FiX } from "react-icons/fi";
 
 export default function SignupModal({ open, onClose, onSwitchToLogin }) {
   const [email, setEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   async function handleSignup(e) {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { userName } },
@@ -25,16 +25,13 @@ export default function SignupModal({ open, onClose, onSwitchToLogin }) {
     setLoading(false);
 
     if (error) {
-      setError(error.message);
-      toast.error(error.message, {
+      toast.error(error.message || "Signup failed", {
         position: "top-right",
-        autoClose: 3000,
-        theme: "colored",
       });
     } else {
       Swal.fire({
         title: "🎉 Account Created!",
-        text: "Check your email for verification link.",
+        text: "Please check your email to verify your account.",
         icon: "success",
         confirmButtonColor: "#6366f1",
         background: "#fff",
@@ -43,74 +40,114 @@ export default function SignupModal({ open, onClose, onSwitchToLogin }) {
     }
   }
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300">
-      <form
-        onSubmit={handleSignup}
-        className="relative bg-white/90 dark:bg-gray-900/80 p-8 rounded-2xl shadow-2xl w-96 border border-white/30"
-      >
-        {/* Gradient Accent Border */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500 via-pink-500 to-purple-600 opacity-20 blur-2xl -z-10"></div>
-
-        <h2 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-indigo-500 to-pink-500 bg-clip-text text-transparent">
-          Create Your Account
-        </h2>
-
-        <div className="flex flex-col gap-4">
-          <input
-            type="text"
-            placeholder="Username"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            className="border border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 w-full p-3 rounded-lg outline-none transition"
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="border border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 w-full p-3 rounded-lg outline-none transition"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="border border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 w-full p-3 rounded-lg outline-none transition"
-            required
-          />
-        </div>
-
-        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-5 w-full bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-pink-500 hover:to-indigo-500 transition-all text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-pink-300/50 disabled:opacity-70"
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4"
         >
-          {loading ? "Creating Account..." : "Sign Up"}
-        </button>
-
-        <p className="text-sm text-center mt-4 text-gray-700">
-          Already have an account?{" "}
-          <span
-            onClick={() => {
-              onClose();
-              onSwitchToLogin();
-            }}
-            className="text-indigo-600 hover:text-pink-500 font-medium cursor-pointer transition"
+          <motion.form
+            onSubmit={handleSignup}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            className="relative w-full max-w-md bg-white/70 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/40 p-8"
           >
-            Login
-          </span>
-        </p>
-      </form>
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <FiX size={22} />
+            </button>
 
-      {/* Toast Container */}
-      <ToastContainer />
-    </div>
+            {/* Header */}
+            <h2 className="text-3xl font-extrabold text-center bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-transparent bg-clip-text mb-2">
+              Create Account ✨
+            </h2>
+            <p className="text-gray-600 text-center mb-6">
+              Start crafting your dream startup pitches today!
+            </p>
+
+            {/* Input Fields */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 mb-1 font-medium">Username</label>
+                <input
+                  type="text"
+                  placeholder="John Doe"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white/80"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-1 font-medium">Email</label>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white/80"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-1 font-medium">Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white/80"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Signup Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-indigo-600 to-pink-500 text-white font-semibold py-3 rounded-xl shadow-md hover:opacity-90 transition-all mt-6"
+            >
+              {loading ? (
+                <>
+                  <FiLoader className="animate-spin" /> Creating Account...
+                </>
+              ) : (
+                <>
+                  <FiUserPlus /> Sign Up
+                </>
+              )}
+            </button>
+
+            {/* Switch to Login */}
+            <p className="text-center text-sm text-gray-700 mt-5">
+              Already have an account?{" "}
+              <span
+                onClick={() => {
+                  onClose();
+                  onSwitchToLogin();
+                }}
+                className="text-indigo-600 font-semibold cursor-pointer hover:underline"
+              >
+                Login
+              </span>
+            </p>
+
+            <ToastContainer />
+          </motion.form>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

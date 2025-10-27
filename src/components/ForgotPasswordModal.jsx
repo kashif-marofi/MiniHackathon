@@ -1,40 +1,29 @@
-import React, { useEffect, useState } from "react";
+// 📁 src/components/ForgotPasswordModal.jsx
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { FiX, FiMail, FiLoader } from "react-icons/fi";
 import supabase from "../helper/supabaseClient";
-import { FiX, FiLogIn, FiLoader } from "react-icons/fi";
+import { toast } from "react-toastify";
 
-export default function LoginModal({ open, onClose, onSwitchToSignup, onForgotPassword }) {
+export default function ForgotPasswordModal({ open, onClose, onSwitchToLogin }) {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    const handleEsc = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
-
-  async function handleLogin(e) {
+  async function handleReset(e) {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/reset-password",
     });
+
     setLoading(false);
 
     if (error) {
-      toast.error(error.message || "Invalid credentials", {
-        position: "top-right",
-      });
+      toast.error(error.message || "Something went wrong!");
     } else {
-      toast.success("🎉 Welcome back!");
+      toast.success("📩 Password reset link sent! Check your email.");
       onClose();
-      navigate("/dashboard");
     }
   }
 
@@ -54,7 +43,6 @@ export default function LoginModal({ open, onClose, onSwitchToSignup, onForgotPa
             transition={{ type: "spring", duration: 0.5 }}
             className="relative w-full max-w-md bg-white/70 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/40 p-8"
           >
-            {/* Close Button */}
             <button
               onClick={onClose}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
@@ -62,22 +50,17 @@ export default function LoginModal({ open, onClose, onSwitchToSignup, onForgotPa
               <FiX size={22} />
             </button>
 
-            {/* Header */}
             <h2 className="text-3xl font-extrabold text-center bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-transparent bg-clip-text mb-2">
-              Welcome Back 👋
+              Reset Password 🔑
             </h2>
             <p className="text-gray-600 text-center mb-6">
-              Login to continue building your startup pitches
+              Enter your email to receive a password reset link
             </p>
 
-            {/* Form */}
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleReset} className="space-y-4">
               <div>
-                <label className="block text-gray-700 mb-1 font-medium">
-                  Email
-                </label>
+                <label className="block text-gray-700 mb-1 font-medium">Email</label>
                 <input
-                  disabled={loading}
                   type="email"
                   placeholder="you@example.com"
                   value={email}
@@ -87,22 +70,6 @@ export default function LoginModal({ open, onClose, onSwitchToSignup, onForgotPa
                 />
               </div>
 
-              <div>
-                <label className="block text-gray-700 mb-1 font-medium">
-                  Password
-                </label>
-                <input
-                  disabled={loading}
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white/80"
-                  required
-                />
-              </div>
-
-              {/* Button */}
               <button
                 type="submit"
                 disabled={loading}
@@ -110,34 +77,27 @@ export default function LoginModal({ open, onClose, onSwitchToSignup, onForgotPa
               >
                 {loading ? (
                   <>
-                    <FiLoader className="animate-spin" /> Logging in...
+                    <FiLoader className="animate-spin" /> Sending...
                   </>
                 ) : (
                   <>
-                    <FiLogIn /> Login
+                    <FiMail /> Send Reset Link
                   </>
                 )}
               </button>
             </form>
 
-            {/* Switch to Signup */}
             <p className="text-center text-sm text-gray-700 mt-5">
-              Don’t have an account?{" "}
+              Remember your password?{" "}
               <span
                 onClick={() => {
                   onClose();
-                  onSwitchToSignup();
+                  onSwitchToLogin();
                 }}
                 className="text-indigo-600 font-semibold cursor-pointer hover:underline"
               >
-                Sign up
+                Back to Login
               </span>
-            </p>
-            <p
-              onClick={onForgotPassword}
-              className="text-center text-sm text-indigo-600 font-medium mt-3 cursor-pointer hover:underline"
-            >
-              Forgot Password?
             </p>
           </motion.div>
         </motion.div>
